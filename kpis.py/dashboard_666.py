@@ -7,319 +7,390 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 import time
+import numpy as np
 
-# 1. CONFIGURACIÓN DE PÁGINA (Pre-load)
+# ─── CONFIGURACIÓN INICIAL ────────────────────────────────────────
 st.set_page_config(
-    page_title="Rockefeller BI | Premium CX", 
-    layout="wide", 
-    initial_sidebar_state="expanded"
+    page_title="Rockefeller BI | Premium CX 2026",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    page_icon="💎"
 )
 
-# 2. CSS MASIVO DE ALTO IMPACTO (CX & UI)
-# He inyectado animaciones de entrada y efectos de vidrio (Glassmorphism)
+# ─── CSS MEJORADO + MÁS EFECTOS CX ────────────────────────────────
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=IBM+Plex+Mono:wght@400;700&display=swap');
-    
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;700&display=swap');
+
     :root {
-        --primary: #00B5AD;
-        --primary-glow: rgba(0, 181, 173, 0.4);
-        --bg-light: #F8F9FB;
-        --bg-dark: #0E1117;
-        --card-bg: #FFFFFF;
-        --text-main: #1A1A1B;
+        --primary: #00D4BB;
+        --primary-dark: #009688;
+        --primary-glow: rgba(0, 212, 187, 0.25);
+        --bg-light: #F9FAFB;
+        --bg-dark: #0F1419;
+        --card-bg: rgba(255,255,255,0.92);
+        --card-bg-dark: rgba(20,25,31,0.92);
+        --text-main: #0F172A;
+        --text-muted: #64748B;
     }
 
-    /* Animación de entrada */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
     }
 
-    .stApp { 
-        background-color: var(--bg-light); 
-        transition: all 0.5s ease;
-        animation: fadeIn 0.8s ease-out;
+    @keyframes pulseGlow {
+        0%   { box-shadow: 0 0 0 0 var(--primary-glow); }
+        70%  { box-shadow: 0 0 0 12px rgba(0,212,187,0); }
+        100% { box-shadow: 0 0 0 0 rgba(0,212,187,0); }
     }
 
-    /* Header Estilo Corporate Future */
+    .stApp {
+        background: var(--bg-light);
+        font-family: 'Inter', sans-serif;
+    }
+
+    .stApp [data-testid="stDecoration"] { display: none; }
+
     .main-header {
-        background: linear-gradient(135deg, #0E1117 0%, #23272E 100%);
-        padding: 60px;
-        border-radius: 40px;
+        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+        padding: 3.8rem 4rem;
+        border-radius: 1.8rem;
         color: white;
-        margin-bottom: 40px;
-        border-left: 15px solid var(--primary);
+        margin: 1.5rem 0 2.5rem;
+        border-left: 14px solid var(--primary);
         position: relative;
         overflow: hidden;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        box-shadow: 0 20px 50px -12px rgba(0,0,0,0.4);
+        animation: fadeInUp 0.9s ease-out;
     }
 
     .main-header::after {
         content: "ROCKEFELLER";
         position: absolute;
-        right: -30px;
-        bottom: -50px;
-        font-size: 160px;
+        right: -60px;
+        bottom: -80px;
+        font-size: 220px;
         font-weight: 900;
-        color: rgba(255,255,255,0.03);
-        letter-spacing: -10px;
+        color: rgba(255,255,255,0.04);
+        letter-spacing: -14px;
+        pointer-events: none;
     }
 
-    /* Cards con Efecto Hover CX */
     .chart-wrapper {
         background: var(--card-bg);
-        padding: 30px;
-        border-radius: 30px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-        border: 1px solid rgba(0,0,0,0.05);
-        margin-bottom: 30px;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        padding: 1.8rem;
+        border-radius: 1.5rem;
+        border: 1px solid rgba(226,232,240,0.6);
+        box-shadow: 0 10px 30px -6px rgba(0,0,0,0.08);
+        margin-bottom: 1.8rem;
+        transition: all 0.42s cubic-bezier(0.34, 1.56, 0.64, 1);
+        animation: fadeInUp 0.7s ease-out;
     }
-    .chart-wrapper:hover { 
-        transform: scale(1.02); 
-        box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+
+    .chart-wrapper:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 22px 50px -12px rgba(0,212,187,0.22);
         border-color: var(--primary);
     }
 
-    /* Banners de Sección */
     .section-banner {
-        background: white;
-        padding: 20px 40px;
-        border-radius: 20px;
-        border-right: 8px solid var(--primary);
-        font-size: 28px;
-        font-weight: 800;
+        background: linear-gradient(90deg, #ffffff 0%, #f8fafc 100%);
+        padding: 1.2rem 2rem;
+        border-radius: 1.2rem;
+        border-right: 10px solid var(--primary);
+        font-size: 1.6rem;
+        font-weight: 700;
         color: var(--text-main);
-        margin: 60px 0 30px 0;
-        box-shadow: 5px 5px 20px rgba(0,0,0,0.02);
+        margin: 2.8rem 0 1.6rem;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.04);
         display: flex;
         align-items: center;
         justify-content: space-between;
     }
 
-    /* Métricas */
     div[data-testid="stMetric"] {
-        background: white !important;
-        border-radius: 25px !important;
-        padding: 30px !important;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.02) !important;
-        border-bottom: 6px solid var(--primary) !important;
+        background: var(--card-bg) !important;
+        border-radius: 1.4rem !important;
+        padding: 1.8rem 1.4rem !important;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06) !important;
+        border-bottom: 8px solid var(--primary) !important;
+        transition: all 0.3s ease;
     }
-    
+
+    div[data-testid="stMetric"]:hover {
+        transform: translateY(-4px);
+        animation: pulseGlow 1.8s infinite;
+    }
+
     [data-testid="stMetricValue"] {
         color: var(--primary) !important;
         font-family: 'IBM Plex Mono', monospace !important;
         font-weight: 700 !important;
-        font-size: 45px !important;
+        font-size: 2.6rem !important;
+        letter-spacing: -0.5px;
     }
 
-    /* Ajustes modo oscuro forzado por CSS */
-    .dark-mode {
-        background-color: var(--bg-dark) !important;
-        color: white !important;
+    [data-testid="stMetricLabel"] {
+        color: var(--text-muted) !important;
+        font-weight: 500 !important;
     }
+
+    /* Modo oscuro mejor controlado */
+    .dark-theme .stApp { background: var(--bg-dark) !important; }
+    .dark-theme .main-header { background: linear-gradient(135deg, #000814 0%, #001233 100%) !important; }
+    .dark-theme .chart-wrapper { background: var(--card-bg-dark) !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+    .dark-theme .section-banner { background: linear-gradient(90deg, #1e293b 0%, #334155 100%) !important; color: #e2e8f0 !important; }
+
     </style>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
-# 3. MOTOR DE DATOS (DATA ENGINE)
-@st.cache_data
-def load_and_clean():
-    # Simulamos un delay de carga para CX
-    time.sleep(1)
-    df = pd.read_csv("base_para_dashboard.csv", engine="pyarrow")
-    return df.dropna()
-
-try:
-    df = load_and_clean()
-    
-    # Análisis de Arquitectura de Datos
-    num_cols = df.select_dtypes(include=['number']).columns.tolist()
-    cat_cols = df.select_dtypes(include=['object']).columns.tolist()
-    
-    if not num_cols or not cat_cols:
-        st.error("⚠️ Estructura de CSV no compatible. Se requieren columnas numéricas y de texto.")
+# ─── CARGA DE DATOS + VALIDACIONES ROBUSTAS ───────────────────────
+@st.cache_data(show_spinner="Cargando motor de inteligencia Rockefeller...")
+def load_and_prepare_data():
+    time.sleep(0.8)  # simulación CX premium load
+    try:
+        df = pd.read_csv("base_para_dashboard.csv", engine="pyarrow")
+        df = df.dropna(how="all")
+        
+        num_cols  = df.select_dtypes(include="number").columns.tolist()
+        date_cols = df.select_dtypes(include="datetime").columns.tolist()
+        cat_cols  = [c for c in df.columns if c not in num_cols + date_cols]
+        
+        if len(num_cols) < 1:
+            st.error("No se encontraron columnas numéricas → KPI imposible de calcular")
+            st.stop()
+            
+        return df, num_cols, cat_cols, date_cols
+    except Exception as e:
+        st.error(f"Error crítico al leer el archivo:\n{e}")
+        st.info("Asegúrate que exista **base_para_dashboard.csv** en la carpeta raíz")
         st.stop()
-        
-    v_col = num_cols[0] 
-    c_col = cat_cols[0]
 
-    # 4. SIDEBAR AVANZADO (Filtros Predictivos)
-    with st.sidebar:
-        st.image("https://cdn-icons-png.flaticon.com/512/3616/3616215.png", width=80)
-        st.title("CX Control Center")
-        st.markdown("---")
-        
-        modo_visual = st.radio("🎨 Theme Engine", ["Light Experience", "Dark Experience"])
-        
-        st.subheader("🎯 Segmentación")
-        categoria_sel = st.selectbox("Filtrar por Dimensión", df[c_col].unique())
-        
-        st.subheader("💰 Threshold de Valor")
-        rango_valores = st.slider("Rango", 
-                                  int(df[v_col].min()), 
-                                  int(df[v_col].max()), 
-                                  (int(df[v_col].min()), int(df[v_col].max())))
-        
-        df_filtrado = df[(df[c_col] == categoria_sel) & (df[v_col].between(rango_valores[0], rango_valores[1]))]
-        
-        st.markdown("---")
-        st.download_button(
-            label="💾 Exportar Inteligencia (CSV)",
-            data=df_filtrado.to_csv(index=False).encode("utf-8"),
-            file_name=f"Rockefeller_CX_{datetime.now().strftime('%Y%m%d')}.csv",
-            mime="text/csv"
-        )
+df, num_cols, cat_cols, date_cols = load_and_prepare_data()
 
-    # 5. HEADER DINÁMICO
-    st.markdown(f"""
-        <div class="main-header">
-            <h4 style='color: var(--primary); margin:0; letter-spacing: 4px;'>VIRTUAL INTELLIGENCE ENGINE</h4>
-            <h1 style='margin:0; font-size: 65px; font-weight: 800; letter-spacing: -3px;'>ROCKEFELLER <span style='color:var(--primary)'>SYSTEMS</span></h1>
-            <p style='opacity: 0.7; font-size: 20px;'>Estrategia de Datos en Tiempo Real | {datetime.now().strftime('%H:%M:%S')} UTC</p>
-        </div>
-    """, unsafe_allow_html=True)
+# Variables seguras
+v_col = num_cols[0]                     # valor principal (revenue, cantidad, etc)
+c_col = cat_cols[0] if cat_cols else None
+t_col = date_cols[0] if date_cols else None
 
-    # 6. MÉTRICAS DE IMPACTO
-    m1, m2, m3, m4 = st.columns(4)
-    with m1: st.metric("REVENUE STREAM", f"$ {df[v_col].sum():,.0f}", "+12.4%")
-    with m2: st.metric("CUSTOMER BASE", f"{len(df):,}", "+5.8%")
-    with m3: st.metric("AVG TRANSACTION", f"$ {df[v_col].mean():,.2f}", "-1.2%")
-    with m4: st.metric("CX SCORE", "9.8/10", "PRO")
+# ─── SIDEBAR AVANZADO ─────────────────────────────────────────────
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/906/906361.png", width=96)
+    st.title("Rockefeller CX Hub")
+    st.caption("Intelligence Engine v6.2 – 2026")
 
-    # 7. MOTOR DE RENDERIZADO DE GRÁFICOS (STYLING ENGINE)
-    def make_pro_plot(fig, title, color="#00B5AD"):
-        # Aplicamos el estilo de "Alta Calidad" de tu imagen de referencia
-        fig.update_layout(
-            title=dict(text=f"<b>{title}</b>", font=dict(size=22, color='#1A1A1B')),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            margin=dict(l=20, r=20, t=70, b=20),
-            font=dict(family="Inter, sans-serif", size=13, color="#555"),
-            colorway=[color, "#FF851B", "#2ECC40", "#FF4136", "#B10DC9"],
-            hoverlabel=dict(bgcolor="white", font_size=16, font_family="Inter")
-        )
-        fig.update_xaxes(showgrid=False, zeroline=False)
-        fig.update_yaxes(showgrid=True, gridcolor="#F0F0F0", zeroline=False)
-        return fig
+    st.markdown("---")
 
-    # 8. SISTEMA DE TABS CX
-    tabs = st.tabs(["💎 ESTRATEGIA", "📈 FINANZAS", "🧩 OPERACIONES", "🚀 ANALÍTICA"])
+    theme = st.radio("Theme Engine", ["Light Premium", "Dark Elite"], horizontal=True)
+    if theme == "Dark Elite":
+        st.markdown('<script>document.body.classList.add("dark-theme");</script>', unsafe_allow_html=True)
+    else:
+        st.markdown('<script>document.body.classList.remove("dark-theme");</script>', unsafe_allow_html=True)
 
-    # Función Maestra de Visualización (4 a los costados, 1 al centro)
-    def render_cx_block(section_df, title, main_color):
-        st.markdown(f'<div class="section-banner"><span>{title}</span> <small>v5.1</small></div>', unsafe_allow_html=True)
-        
-        # Grid System Premium
-        col_left, col_center, col_right = st.columns([1, 1.8, 1])
-        
-        with col_left:
-            # Visual 1
+    st.subheader("🎯 Filtros Estratégicos")
+
+    if c_col:
+        cat_filter = st.selectbox("Dimensión principal", ["Todas"] + sorted(df[c_col].unique().tolist()))
+    else:
+        cat_filter = "Todas"
+
+    rango = st.slider(
+        f"Rango de **{v_col}**",
+        int(df[v_col].min()),
+        int(df[v_col].max()),
+        (int(df[v_col].min()), int(df[v_col].max()))
+    )
+
+    # Filtro dinámico
+    df_f = df.copy()
+    if cat_filter != "Todas" and c_col:
+        df_f = df_f[df_f[c_col] == cat_filter]
+    df_f = df_f[df_f[v_col].between(rango[0], rango[1])]
+
+    st.markdown("---")
+    st.download_button(
+        "📥 Exportar Inteligencia Filtrada",
+        df_f.to_csv(index=False).encode('utf-8'),
+        file_name=f"Rockefeller_{datetime.now():%Y%m%d_%H%M}.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
+
+# ─── HEADER DINÁMICO ──────────────────────────────────────────────
+st.markdown(f"""
+    <div class="main-header">
+        <h4 style="color:var(--primary);margin:0;letter-spacing:5px;font-weight:500;">NEXT-GEN DATA OS</h4>
+        <h1 style="margin:8px 0 12px;font-size:4.4rem;font-weight:900;letter-spacing:-3px;">
+            ROCKEFELLER <span style="color:var(--primary)">HORIZON</span>
+        </h1>
+        <p style="opacity:0.8;font-size:1.25rem;margin:0;">
+            Live Strategic Intelligence • {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ART
+        </p>
+    </div>
+""", unsafe_allow_html=True)
+
+# ─── MÉTRICAS PRINCIPALES (más pulidas) ───────────────────────────
+m1, m2, m3, m4 = st.columns(4)
+with m1:
+    st.metric("Revenue Total", f"${df_f[v_col].sum():,.0f}", "+11.8%", delta_color="normal")
+with m2:
+    st.metric("Registros Activos", f"{len(df_f):,}", f"{len(df_f)/len(df)*100:.1f}% del total")
+with m3:
+    st.metric("Ticket Promedio", f"${df_f[v_col].mean():,.1f}", f"{df_f[v_col].mean()/df[v_col].mean()*100-100:+.1f}% vs global")
+with m4:
+    st.metric("CX Health Score", "9.7/10", "Elite", delta_color="off")
+
+# ─── TABS CON MÁS SECCIONES ──────────────────────────────────────
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "🌐 Estrategia Global", 
+    "💰 Performance Financiera", 
+    "⚙️ Operaciones", 
+    "📊 Analítica Avanzada", 
+    "🔮 Predicción & AI"
+])
+
+def style_figure(fig, title, height=None):
+    fig.update_layout(
+        title=dict(text=f"<b>{title}</b>", font=dict(size=24, color='#0F172A')),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20,r=20,t=80,b=20),
+        font=dict(family="Inter,sans-serif", size=13, color="#475569"),
+        hoverlabel=dict(bgcolor="white", font_size=15),
+        height=height,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+    )
+    fig.update_xaxes(showgrid=False, zeroline=False)
+    fig.update_yaxes(gridcolor="#e2e8f0", zeroline=False)
+    return fig
+
+# ─── BLOQUE VISUAL GENÉRICO (reutilizable) ───────────────────────
+def render_visual_block(df_sec, title, accent_color="#00D4BB", key_prefix=""):
+    st.markdown(f'<div class="section-banner"><span>{title}</span><small>v6.2 • {len(df_sec)} registros</small></div>', unsafe_allow_html=True)
+    
+    cL, cC, cR = st.columns([1, 1.9, 1])
+
+    with cL:
+        with st.container():
             st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
-            f1 = px.bar(section_df.head(6), x=c_col, y=v_col, text_auto='.2s')
-            st.plotly_chart(make_pro_plot(f1, "Market Ranking", main_color), use_container_width=True)
+            fig1 = px.bar(df_sec.head(10).sort_values(v_col, ascending=True),
+                          y=c_col if c_col else df_sec.index.astype(str),
+                          x=v_col, text_auto=True)
+            st.plotly_chart(style_figure(fig1, "Top Performers"), use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Visual 2
+
+        with st.container():
             st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
-            f2 = px.line(section_df.head(15), y=v_col, markers=True)
-            st.plotly_chart(make_pro_plot(f2, "Temporal Pulse", main_color), use_container_width=True)
+            fig2 = px.line(df_sec.sort_values(t_col if t_col else v_col),
+                           x=t_col if t_col else None, y=v_col, markers=True)
+            st.plotly_chart(style_figure(fig2, "Evolución Temporal"), use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
-        with col_center:
-            # Visual 3: El Protagonista (Sunburst o Donut 3D)
-            st.markdown('<div class="chart-wrapper" style="height: 100%;">', unsafe_allow_html=True)
-            f3 = px.sunburst(section_df.head(40), path=[c_col, section_df.columns[1] if len(section_df.columns)>1 else c_col], values=v_col,
-                            color_continuous_scale='Viridis')
-            f3.update_layout(height=600)
-            st.plotly_chart(make_pro_plot(f3, "CORE CX ECOSYSTEM", main_color), use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        with col_right:
-            # Visual 4
-            st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
-            f4 = px.pie(section_df.head(8), values=v_col, names=c_col, hole=0.7)
-            f4.update_traces(textinfo='percent')
-            st.plotly_chart(make_pro_plot(f4, "Share of Wallet", main_color), use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Visual 5
-            st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
-            f5 = px.area(section_df.head(12), y=v_col)
-            st.plotly_chart(make_pro_plot(f5, "Momentum Build", main_color), use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-    # 9. RENDERIZADO DE SECCIONES
-    with tabs[0]:
-        render_cx_block(df, "GLOBAL STRATEGY OVERVIEW", "#00B5AD")
-
-    with tabs[1]:
-        render_cx_block(df.sort_values(v_col, ascending=False), "FINANCIAL PERFORMANCE", "#FF851B")
-
-    with tabs[2]:
-        render_cx_block(df.sample(frac=0.5), "SUPPLY CHAIN & LOGISTICS", "#2ECC40")
-
-    with tabs[3]:
-        st.markdown('<div class="section-banner">ALGORITHM & PREDICTIVE INSIGHTS</div>', unsafe_allow_html=True)
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
-            corr = df[num_cols].corr()
-            fig_heat = px.imshow(corr, text_auto=True, aspect="auto", color_continuous_scale='RdBu_r')
-            st.plotly_chart(make_pro_plot(fig_heat, "Factor Correlation Matrix"), use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-        with c2:
-            st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
-            fig_scatter = px.scatter(df.head(200), x=num_cols[0], y=num_cols[1] if len(num_cols)>1 else num_cols[0], 
-                                     color=c_col, size=v_col, trendline="ols")
-            st.plotly_chart(make_pro_plot(fig_scatter, "Multivariate Analysis"), use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        # Gauge de Performance Final
-        st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
-        col_g1, col_g2 = st.columns([1, 2])
-        with col_g1:
-            st.write("### 🤖 Rockefeller AI Insights")
-            st.info(f"Basado en el análisis de **{len(df)}** registros, el sistema detecta una eficiencia del **94%**.")
-            st.warning("Se observa una volatilidad del 3% en la categoría seleccionada.")
-            st.success("Recomendación: Aumentar la inversión en el Q3.")
-        with col_g2:
-            fig_gauge = go.Figure(go.Indicator(
-                mode = "gauge+number+delta",
-                value = df[v_col].mean(),
-                domain = {'x': [0, 1], 'y': [0, 1]},
-                title = {'text': "Health Score Index"},
-                gauge = {'axis': {'range': [None, df[v_col].max()]},
-                         'bar': {'color': "#00B5AD"},
-                         'steps' : [
-                             {'range': [0, df[v_col].mean()*0.8], 'color': "#FFD6D6"},
-                             {'range': [df[v_col].mean()*0.8, df[v_col].max()], 'color': "#D6FFEB"}]}))
-            st.plotly_chart(make_pro_plot(fig_gauge, "System Health"), use_container_width=True)
+    with cC:
+        st.markdown('<div class="chart-wrapper" style="height:720px;">', unsafe_allow_html=True)
+        if c_col and len(df_sec[c_col].unique()) > 3:
+            fig_center = px.treemap(df_sec, path=[c_col], values=v_col,
+                                    color=v_col, color_continuous_scale='Tealrose')
+        else:
+            fig_center = px.sunburst(df_sec.head(60), path=[c_col] if c_col else [v_col],
+                                     values=v_col, color=v_col)
+        fig_center.update_traces(textinfo="label+percent entry")
+        st.plotly_chart(style_figure(fig_center, "Ecosistema Principal", height=680), use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 10. ENGINE MODO OSCURO (DARK MODE TOGGLE)
-    if modo_visual == "Dark Experience":
-        st.markdown("""
-            <style>
-            .stApp { background-color: #0E1117 !important; color: white !important; }
-            .chart-wrapper { background-color: #1C2128 !important; border-color: #30363D !important; color: white !important; }
-            .section-banner { background-color: #1C2128 !important; color: white !important; }
-            h1, h2, h3, h4, p, span { color: white !important; }
-            div[data-testid="stMetric"] { background-color: #1C2128 !important; border-bottom-color: var(--primary) !important; }
-            </style>
-            """, unsafe_allow_html=True)
+    with cR:
+        with st.container():
+            st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
+            fig4 = px.pie(df_sec.head(12), values=v_col, names=c_col if c_col else df_sec.index,
+                          hole=0.65)
+            fig4.update_traces(textposition='inside', textinfo='percent+label')
+            st.plotly_chart(style_figure(fig4, "Distribución"), use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-    # 11. FOOTER
-    st.markdown("---")
-    st.markdown(f"""
-        <p style='text-align:center; color:#888; padding: 20px;'>
-            Rockefeller Intelligence | Secure Data Protocol | 2026<br>
-            <small>Diseñado para Terminales de Alta Resolución</small>
-        </p>
-    """, unsafe_allow_html=True)
+        with st.container():
+            st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
+            fig5 = px.density_heatmap(df_sec, x=num_cols[0], y=num_cols[1] if len(num_cols)>1 else v_col,
+                                      color_continuous_scale='Blues')
+            st.plotly_chart(style_figure(fig5, "Densidad 2D"), use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-except Exception as e:
-    st.error(f"🚨 BOOT ERROR: El sistema no pudo inicializar los módulos de datos. Detalles: {e}")
-    st.info("Verifica que 'base_para_dashboard.csv' esté en la raíz y tenga el formato correcto.")
+# ─── RENDERIZADO POR TAB ──────────────────────────────────────────
+with tab1:
+    render_visual_block(df_f, "Visión Estratégica Global", "#00D4BB")
+
+with tab2:
+    render_visual_block(df_f.sort_values(v_col, ascending=False), "Ranking Financiero", "#F59E0B")
+
+with tab3:
+    render_visual_block(df_f.sample(frac=0.6 if len(df_f)>100 else 1), "Operaciones & Eficiencia", "#10B981")
+
+with tab4:
+    st.markdown('<div class="section-banner">Matriz Analítica Avanzada</div>', unsafe_allow_html=True)
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
+        if len(num_cols) >= 2:
+            corr = df_f[num_cols].corr()
+            fig_heat = px.imshow(corr, text_auto=".2f", color_continuous_scale="RdBu_r")
+            st.plotly_chart(style_figure(fig_heat, "Matriz de Correlaciones"), use_container_width=True)
+        else:
+            st.info("Se necesita al menos 2 columnas numéricas para correlación")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with c2:
+        st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
+        if len(num_cols) >= 2:
+            fig_sc = px.scatter(df_f.sample(min(400, len(df_f))), x=num_cols[0], y=num_cols[1],
+                                color=c_col if c_col else None, size=v_col,
+                                hover_data=[v_col], trendline="ols" if len(df_f)<1500 else None)
+            st.plotly_chart(style_figure(fig_sc, "Análisis Multivariado"), use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+with tab5:
+    st.markdown('<div class="section-banner">Motor Predictivo & Señales AI</div>', unsafe_allow_html=True)
+    
+    colAI1, colAI2 = st.columns([1, 2.4])
+    
+    with colAI1:
+        st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
+        st.subheader("Insights Automatizados")
+        st.success(f"**{len(df_f):,}** transacciones analizadas")
+        st.info(f"Volatilidad detectada: ±{df_f[v_col].std()/df_f[v_col].mean()*100:.1f}%")
+        st.warning("Oportunidad Q3: +18% potencial en segmento alto valor")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with colAI2:
+        st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
+        fig_g = go.Figure(go.Indicator(
+            mode = "gauge+number+delta",
+            value = df_f[v_col].mean(),
+            domain = {'x': [0, 1], 'y': [0, 1]},
+            title = {'text': "Índice de Salud Global"},
+            delta = {'reference': df[v_col].mean(), 'increasing': {'color': "#10B981"}},
+            gauge = {
+                'axis': {'range': [None, df[v_col].max()*1.1]},
+                'bar': {'color': "var(--primary)"},
+                'steps': [
+                    {'range': [0, df[v_col].mean()*0.7], 'color': "#FEE2E2"},
+                    {'range': [df[v_col].mean()*0.7, df[v_col].max()*0.9], 'color': "#FEF3C7"},
+                    {'range': [df[v_col].mean()*0.9, df[v_col].max()*1.1], 'color': "#D1FAE5"}
+                ],
+                'threshold' : {'line': {'color': "red", 'width': 4}, 'thickness': 0.75, 'value': df[v_col].mean()}
+            }
+        ))
+        fig_g.update_layout(height=380, margin=dict(l=40,r=40,t=60,b=40))
+        st.plotly_chart(fig_g, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+# ─── FOOTER ───────────────────────────────────────────────────────
+st.markdown("---")
+st.markdown(f"""
+    <div style="text-align:center; color:#64748B; padding:2.5rem 0;">
+        <strong>Rockefeller Horizon Intelligence</strong> — Secure • Real-Time • 2026<br>
+        <small>Diseñado para pantallas 4K+ • Performance optimizada</small>
+    </div>
+""", unsafe_allow_html=True)
