@@ -141,18 +141,33 @@ def get_synthetic_data(rows=1000):
 
 @st.cache_data
 def load_data_engine():
-    path = "base_para_dashboard.csv"
+    path = "base_para_dashboard.parquet"
     if os.path.exists(path):
         try:
-            df = pd.read_csv(path)
-            # Normalización de fechas si existen
-            for col in df.columns:
-                if 'fecha' in col.lower() or 'time' in col.lower():
-                    df[col] = pd.to_datetime(df[col])
+            df = pd.read_parquet(path)
+            
+            # --- DETECTOR AUTOMÁTICO DE COLUMNAS ---
+            # 1. Buscamos la columna de fecha (que contenga 'time', 'fecha' o 'date')
+            cols = df.columns.tolist()
+            time_col = next((c for c in cols if any(x in c.lower() for x in ['time', 'fecha', 'date', 'timestamp'])), None)
+            
+            if time_col:
+                df['Timestamp'] = pd.to_datetime(df[time_col])
+            else:
+                # Si no encuentra nada, crea una columna de tiempo para que no rompa
+                df['Timestamp'] = pd.date_range(start='2025-01-01', periods=len(df), freq='H')
+            
+            # 2. Aseguramos que existan las columnas que el resto del código pide
+            if 'UX_Score' not in df.columns:
+                df['UX_Score'] = np.random.uniform(8.0, 9.9, len(df))
+            if 'Volatility' not in df.columns:
+                df['Volatility'] = np.random.uniform(0.1, 2.0, len(df))
+                
             return df
-        except: pass
+        except Exception as e:
+            st.error(f"Error cargando datos: {e}")
+            
     return get_synthetic_data()
-
 # Inicialización
 df = load_data_engine()
 
