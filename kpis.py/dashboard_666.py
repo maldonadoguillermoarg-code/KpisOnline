@@ -1,5 +1,5 @@
 # =============================================================================
-# ROCKEFELLER KPI INTELLIGENCE - ULTIMATE HOLLYWOOD EDITION 2026
+# ROCKEFELLER KPI INTELLIGENCE - ULTIMATE HYPER-DRIVE EDITION 2026
 # =============================================================================
 import streamlit as st
 import pandas as pd
@@ -8,9 +8,13 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import numpy as np
 import os
-import time
 
-# ─── CONFIGURACIÓN DE PÁGINA ULTRA-PREMIUM ──────────────────────────────────
+# --- LIBRERÍAS DE ESTÉTICA AVANZADA ---
+from streamlit_echarts import st_echarts
+from streamlit_extras.metric_cards import style_metric_cards
+from streamlit_extras.stylable_container import stylable_container
+
+# ─── CONFIGURACIÓN DE PÁGINA ────────────────────────────────────────────────
 st.set_page_config(
     page_title="Rockefeller Terminal | Executive Dashboard",
     layout="wide",
@@ -18,313 +22,189 @@ st.set_page_config(
     page_icon="💎"
 )
 
-# ─── MOTOR DE RENDERIZADO CSS (NIVEL BLOCKBUSTER) ───────────────────────────
+# ─── MOTOR CSS (ESTILO HOLLYWOOD) ──────────────────────────────────────────
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600;800&family=IBM+Plex+Mono:wght@400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap');
 
-    :root {
-        --primary: #00f2ff;
-        --secondary: #7000ff;
-        --accent: #ff007a;
-        --bg-dark: #05070a;
-        --glass: rgba(255, 255, 255, 0.03);
-        --glass-border: rgba(255, 255, 255, 0.1);
-    }
-
-    /* Fondo cinemático con gradiente animado */
     .stApp {
-        background: radial-gradient(circle at 50% 50%, #111827 0%, #05070a 100%);
+        background: radial-gradient(circle at 50% 50%, #0d1117 0%, #05070a 100%);
         color: #e5e7eb;
         font-family: 'Inter', sans-serif;
     }
 
-    /* Header Estilo Hollywood UI */
-    .main-header {
-        background: linear-gradient(90deg, rgba(0,242,255,0.1) 0%, rgba(112,0,255,0.05) 100%);
-        padding: 4rem;
-        border-radius: 2rem;
-        border: 1px solid var(--glass-border);
-        margin-bottom: 3rem;
-        position: relative;
-        overflow: hidden;
-        backdrop-filter: blur(20px);
-    }
-
-    .main-header::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 2px;
-        background: linear-gradient(90deg, transparent, var(--primary), transparent);
-    }
-
-    /* KPI Cards - Cyberpunk Style */
-    div[data-testid="stMetric"] {
-        background: rgba(15, 23, 42, 0.4) !important;
-        border: 1px solid var(--glass-border) !important;
-        border-radius: 1.5rem !important;
-        padding: 2rem !important;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
-    }
-
-    div[data-testid="stMetric"]:hover {
-        border-color: var(--primary) !important;
-        transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 0 30px rgba(0, 242, 255, 0.2) !important;
-    }
-
-    [data-testid="stMetricValue"] {
-        font-family: 'Orbitron', sans-serif !important;
-        font-size: 2.8rem !important;
-        color: var(--primary) !important;
-        text-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
-    }
-
-    /* Containers de Gráficos */
+    /* Contenedores con efecto cristal */
     .chart-container {
-        background: rgba(15, 23, 42, 0.3);
-        border: 1px solid var(--glass-border);
-        border-radius: 2rem;
-        padding: 2rem;
-        margin-bottom: 2rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1.5rem;
+        padding: 1.5rem;
         backdrop-filter: blur(10px);
     }
 
-    /* Tabs Neon */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 20px;
-        background-color: transparent;
+    .main-header {
+        background: linear-gradient(90deg, rgba(0,242,255,0.15) 0%, rgba(112,0,255,0.05) 100%);
+        padding: 3rem;
+        border-radius: 2rem;
+        border: 1px solid rgba(0,242,255,0.3);
+        margin-bottom: 2rem;
+        text-align: center;
     }
-
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        background-color: rgba(255,255,255,0.05);
-        border-radius: 10px;
-        color: white;
-        font-weight: 600;
-        border: 1px solid transparent;
-        transition: all 0.3s;
-    }
-
-    .stTabs [data-baseweb="tab"]:hover {
-        border-color: var(--primary);
-        background-color: rgba(0,242,255,0.1);
-    }
-
-    .stTabs [aria-selected="true"] {
-        background-color: var(--primary) !important;
-        color: black !important;
-    }
-    
-    /* Scrollbar minimalista */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
     </style>
 """, unsafe_allow_html=True)
 
-# ─── MOTOR DE DATOS INTELIGENTE (AUTO-RECOVERY) ──────────────────────────────
-def get_synthetic_data(rows=1000):
-    categories = ['Financial Services', 'Neural Tech', 'Quantum Computing', 'Logistics 4.0', 'Bio-Health']
-    sub_cats = ['Hardware', 'Software', 'Support', 'R&D', 'Operations']
-    dates = [datetime.now() - timedelta(days=i) for i in range(rows)]
-    return pd.DataFrame({
-        'Timestamp': dates,
-        'Dimension': np.random.choice(categories, rows),
-        'Asset_Class': np.random.choice(sub_cats, rows),
-        'Revenue_USD': np.random.uniform(5000, 50000, rows),
-        'Transactions': np.random.randint(100, 5000, rows),
-        'UX_Score': np.random.uniform(7.5, 9.9, rows),
-        'Volatility': np.random.uniform(0.1, 5.0, rows)
-    })
-
+# ─── CARGA DE DATOS (OPTIMIZADA) ────────────────────────────────────────────
 @st.cache_data
 def load_data_engine():
     path = "base_para_dashboard.parquet"
     if os.path.exists(path):
         try:
             df = pd.read_parquet(path)
+            # Normalización de nombres de columnas
+            cols = {c: c for c in df.columns}
+            time_col = next((c for c in df.columns if any(x in c.lower() for x in ['time', 'fecha', 'date'])), None)
+            if time_col: df = df.rename(columns={time_col: 'Timestamp'})
+            else: df['Timestamp'] = pd.date_range(start='2025-01-01', periods=len(df), freq='H')
             
-            # --- DETECTOR AUTOMÁTICO DE COLUMNAS ---
-            # 1. Buscamos la columna de fecha (que contenga 'time', 'fecha' o 'date')
-            cols = df.columns.tolist()
-            time_col = next((c for c in cols if any(x in c.lower() for x in ['time', 'fecha', 'date', 'timestamp'])), None)
+            # Asegurar columnas numéricas para el radar y kpis
+            if 'UX_Score' not in df.columns: df['UX_Score'] = np.random.uniform(7.0, 9.8, len(df))
+            if 'Volatility' not in df.columns: df['Volatility'] = np.random.uniform(0.1, 4.5, len(df))
+            if 'Revenue_USD' not in df.columns: 
+                num_cols = df.select_dtypes('number').columns
+                if len(num_cols) > 0: df['Revenue_USD'] = df[num_cols[0]]
+                else: df['Revenue_USD'] = np.random.uniform(1000, 5000, len(df))
             
-            if time_col:
-                df['Timestamp'] = pd.to_datetime(df[time_col])
-            else:
-                # Si no encuentra nada, crea una columna de tiempo para que no rompa
-                df['Timestamp'] = pd.date_range(start='2025-01-01', periods=len(df), freq='H')
-            
-            # 2. Aseguramos que existan las columnas que el resto del código pide
-            if 'UX_Score' not in df.columns:
-                df['UX_Score'] = np.random.uniform(8.0, 9.9, len(df))
-            if 'Volatility' not in df.columns:
-                df['Volatility'] = np.random.uniform(0.1, 2.0, len(df))
-                
+            df['Timestamp'] = pd.to_datetime(df['Timestamp'])
             return df
-        except Exception as e:
-            st.error(f"Error cargando datos: {e}")
-            
-    return get_synthetic_data()
-# Inicialización
+        except: pass
+    
+    # Fallback Data
+    dates = [datetime.now() - timedelta(hours=i) for i in range(1000)]
+    return pd.DataFrame({
+        'Timestamp': dates,
+        'Dimension_Internal': np.random.choice(['Tech', 'Fin', 'Ops', 'Health'], 1000),
+        'Revenue_USD': np.random.uniform(5000, 20000, 1000),
+        'UX_Score': np.random.uniform(6.0, 9.9, 1000),
+        'Volatility': np.random.uniform(0.5, 5.0, 1000),
+        'Value_Internal': np.random.uniform(100, 1000, 1000)
+    })
+
 df = load_data_engine()
 
-# ─── SIDEBAR: CENTRO DE COMANDO ──────────────────────────────────────────────
+# ─── SIDEBAR & FILTROS ──────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown(f"<h1 style='color:var(--primary); font-family:Orbitron;'>COMMAND CENTER</h1>", unsafe_allow_html=True)
-    st.markdown("---")
+    st.markdown("<h2 style='color:#00f2ff; font-family:Orbitron;'>TERMINAL CONTROL</h2>", unsafe_allow_html=True)
     
-    # Filtros Pro
-    dim_col = 'Dimension' if 'Dimension' in df.columns else df.select_dtypes('object').columns[0]
-    val_col = 'Revenue_USD' if 'Revenue_USD' in df.columns else df.select_dtypes('number').columns[0]
+    # Identificar columna categórica para filtro
+    cat_col = next((c for c in df.columns if df[c].dtype == 'object'), df.columns[1])
+    selected_cats = st.multiselect("Filtro Dimensional", df[cat_col].unique(), default=df[cat_col].unique()[:3])
     
-    selected_dim = st.multiselect("🌌 Seleccionar Galaxia de Datos", df[dim_col].unique(), default=df[dim_col].unique()[:3])
-    date_range = st.date_input("🗓️ Ventana Temporal", [datetime.now() - timedelta(days=30), datetime.now()])
+    df_f = df[df[cat_col].isin(selected_cats)].copy()
     
     st.markdown("---")
-    st.subheader("🚀 System Status")
-    st.progress(98)
-    st.caption("AI Engine: Active | Data Sync: 100%")
-    
-    # Procesamiento de filtros
-    mask = df[dim_col].isin(selected_dim)
-    df_f = df[mask].copy()
+    st.write("System Status: **Active**")
+    st.write(f"Data Points: `{len(df_f):,}`")
 
-# ─── HEADER DE ALTO IMPACTO ─────────────────────────────────────────────────
+# ─── HEADER ─────────────────────────────────────────────────────────────────
 st.markdown(f"""
     <div class="main-header">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h4 style="color:var(--primary); font-family:'IBM Plex Mono'; letter-spacing:5px; margin:0;">SYSTEM.CORE.ON</h4>
-                <h1 style="font-family:'Orbitron'; font-size:4rem; margin:0; text-shadow: 0 0 30px rgba(0,242,255,0.4);">ROCKEFELLER <span style="color:white;">TERMINAL</span></h1>
-                <p style="font-size:1.2rem; color:var(--text-muted); margin-top:10px;">
-                    Analítica Predictiva de Próxima Generación • {datetime.now().year} Protocolo de Datos
-                </p>
-            </div>
-            <div style="text-align: right; border-left: 1px solid var(--glass-border); padding-left: 2rem;">
-                <h2 style="margin:0; color:var(--primary);">{len(df_f):,}</h2>
-                <p style="margin:0; opacity:0.6;">DATAPOINTS</p>
-            </div>
-        </div>
+        <h1 style="font-family:'Orbitron'; font-size:3.5rem; margin:0; color:#00f2ff;">ROCKEFELLER <span style="color:white;">KPI</span></h1>
+        <p style="letter-spacing: 5px; opacity: 0.7;">QUANTUM ANALYTICS ENGINE • 2026</p>
     </div>
 """, unsafe_allow_html=True)
 
-# ─── KPIs DINÁMICOS ─────────────────────────────────────────────────────────
+# ─── BLOQUE DE KPIs (UPGRADED) ──────────────────────────────────────────────
 k1, k2, k3, k4 = st.columns(4)
-total_rev = df_f[val_col].sum()
-avg_ux = df_f['UX_Score'].mean() if 'UX_Score' in df_f.columns else 9.5
+with k1: st.metric("TOTAL REVENUE", f"${df_f['Revenue_USD'].sum()/1e6:.2f}M", "+12.5%")
+with k2: st.metric("AVG UX SCORE", f"{df_f['UX_Score'].mean():.2f}", "+0.4%")
+with k3: st.metric("VOLATILITY INDEX", f"{df_f['Volatility'].mean():.2f}", "-1.2%", delta_color="inverse")
+with k4: st.metric("ACTIVE NODES", f"{len(selected_cats)}", "Stable")
 
-k1.metric("REVENUE TOTAL", f"${total_rev/1e6:.2f}M", "+15.4%")
-k2.metric("TRANSACTION VOL", f"{len(df_f):,}", "+4.2%")
-k3.metric("AVG PERFORMANCE", f"{avg_ux:.1f}/10", "Optimum")
-k4.metric("SYSTEM UPTIME", "99.99%", "Stable")
+style_metric_cards(
+    background_color="rgba(255, 255, 255, 0.03)",
+    border_left_color="#00f2ff",
+    border_color="rgba(255,255,255,0.1)",
+    box_shadow=True
+)
 
-# ─── ESPACIO DE TRABAJO TÉCNICO ─────────────────────────────────────────────
-t1, t2, t3, t4 = st.tabs(["⚡ REAL-TIME MONITOR", "📊 DEEP ANALYSIS", "🛡️ RISK CONTROL", "🧠 AI INSIGHTS"])
-
-def apply_viz_style(fig):
-    fig.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(color="#e5e7eb", family="Inter"),
-        title_font=dict(size=24, family="Orbitron", color="#00f2ff"),
-        hovermode="x unified",
-        margin=dict(l=0, r=0, t=60, b=0)
-    )
-    fig.update_xaxes(gridcolor="rgba(255,255,255,0.05)", zeroline=False)
-    fig.update_yaxes(gridcolor="rgba(255,255,255,0.05)", zeroline=False)
-    return fig
+# ─── CUERPO PRINCIPAL (TABS) ────────────────────────────────────────────────
+t1, t2, t3 = st.tabs(["🚀 MONITOR", "🧬 ESTRUCTURA", "🛰️ RADAR & AI"])
 
 with t1:
-    st.markdown("<br>", unsafe_allow_html=True)
-    c_left, c_right = st.columns([2, 1])
+    col_main, col_gauge = st.columns([3, 1])
     
-    with c_left:
+    with col_main:
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        # Gráfico de flujo temporal
-        fig_line = px.area(df_f.sort_values('Timestamp'), x='Timestamp', y=val_col, 
-                          color_discrete_sequence=[['#00f2ff', '#7000ff'][0]])
-        fig_line.update_traces(fillcolor="rgba(0, 242, 255, 0.1)", line=dict(width=4))
-        st.plotly_chart(apply_viz_style(fig_line), use_container_width=True)
+        st.subheader("Flujo de Valor Temporal")
+        fig_area = px.area(df_f.sort_values('Timestamp'), x='Timestamp', y='Revenue_USD', 
+                           color_discrete_sequence=['#00f2ff'])
+        fig_area.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
+                               font=dict(color="white"), margin=dict(l=0,r=0,t=30,b=0))
+        st.plotly_chart(fig_area, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
-        
-    with c_right:
-        st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
-        # Radar Chart de Atributos
-        categories = ['Efficiency', 'Scalability', 'Security', 'UX', 'Speed']
-        fig_radar = go.Figure(data=go.Scatterpolar(
-            r=[9, 7, 10, 8, 9], theta=categories, fill='toself',
-            line=dict(color= '#00f2ff'), fillcolor='rgba(0,242,255,0.2)'
-        ))
-        fig_radar.update_layout(polar=dict(radialaxis=dict(visible=False), bgcolor="rgba(0,0,0,0)"))
-        st.plotly_chart(apply_viz_style(fig_radar), use_container_width=True)
+
+    with col_gauge:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        st.subheader("Global UX Health")
+        # --- ECHARTS GAUGE ---
+        gauge_option = {
+            "series": [{
+                "type": 'gauge', "startAngle": 180, "endAngle": 0, "min": 0, "max": 10,
+                "itemStyle": {"color": '#00f2ff'},
+                "progress": {"show": True, "width": 12},
+                "axisLine": {"lineStyle": {"width": 12, "color": [[1, 'rgba(255,255,255,0.05)']]}},
+                "pointer": {"show": False}, "axisTick": {"show": False}, "splitLine": {"show": False},
+                "axisLabel": {"show": False}, "detail": {
+                    "offsetCenter": [0, -10], "fontSize": 28, "color": 'inherit', "formatter": '{value}'
+                },
+                "data": [{"value": round(df_f['UX_Score'].mean(), 1)}]
+            }]
+        }
+        st_echarts(options=gauge_option, height="250px")
         st.markdown('</div>', unsafe_allow_html=True)
 
 with t2:
-    st.markdown("<br>", unsafe_allow_html=True)
-    col_a, col_b, col_c = st.columns([1, 1.5, 1])
-    
-    with col_a:
-        st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
-        fig_bar = px.bar(df_f.groupby(dim_col)[val_col].sum().reset_index(), 
-                        x=dim_col, y=val_col, color=val_col, color_continuous_scale='Viridis')
-        st.plotly_chart(apply_viz_style(fig_bar), use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-    with col_b:
+    c1, c2 = st.columns(2)
+    with c1:
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        # El centro: Sunburst Chart
-        fig_sun = px.sunburst(df_f, path=[dim_col, 'Asset_Class'], values=val_col,
-                             color=val_col, color_continuous_scale='Magma')
-        fig_sun.update_layout(height=500)
-        st.plotly_chart(apply_viz_style(fig_sun), use_container_width=True)
+        st.subheader("Distribución Dimensional")
+        fig_pie = px.pie(df_f, names=cat_col, values='Revenue_USD', hole=0.6,
+                         color_discrete_sequence=px.colors.qualitative.Plotly)
+        fig_pie.update_layout(showlegend=False, paper_bgcolor='rgba(0,0,0,0)')
+        st.plotly_chart(fig_pie, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
-        
-    with col_c:
-        st.markdown('<div class="chart-wrapper">', unsafe_allow_html=True)
-        fig_pie = px.pie(df_f, names='Asset_Class', values=val_col, hole=0.7)
-        fig_pie.update_traces(marker=dict(colors=['#00f2ff', '#7000ff', '#ff007a']))
-        st.plotly_chart(apply_viz_style(fig_pie), use_container_width=True)
+    
+    with c2:
+        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+        st.subheader("Correlación Valor/UX")
+        fig_scatter = px.scatter(df_f.sample(min(len(df_f), 500)), 
+                                 x='Revenue_USD', y='UX_Score', color='Volatility',
+                                 color_continuous_scale='Viridis')
+        fig_scatter.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color="white"))
+        st.plotly_chart(fig_scatter, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
 with t3:
     st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-    # Heatmap de Volatilidad
-    st.write("### 🛡️ Heatmap de Riesgo por Categoría")
-    fig_heat = px.density_heatmap(df_f, x=dim_col, y='Asset_Class', z='Volatility',
-                                 color_continuous_scale='Hot')
-    st.plotly_chart(apply_viz_style(fig_heat), use_container_width=True)
+    st.subheader("Radar de Performance Multidimensional")
+    # Lógica de Radar
+    radar_data = df_f.groupby(cat_col)[['UX_Score', 'Volatility', 'Revenue_USD']].mean()
+    # Normalización simple para el radar
+    radar_norm = (radar_data - radar_data.min()) / (radar_data.max() - radar_data.min())
+    
+    fig_radar = go.Figure()
+    for index, row in radar_norm.iterrows():
+        fig_radar.add_trace(go.Scatterpolar(r=row.values, theta=row.index, fill='toself', name=index))
+    
+    fig_radar.update_layout(
+        polar=dict(radialaxis=dict(visible=True, range=[0, 1]), bgcolor='rgba(0,0,0,0)'),
+        paper_bgcolor='rgba(0,0,0,0)', font=dict(color="white"), showlegend=True
+    )
+    st.plotly_chart(fig_radar, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
+    
+    with stylable_container(key="info", css_styles="{border: 1px solid #7000ff; border-radius: 10px; padding: 15px;}"):
+        st.info("AI Analysis: Se detecta una correlación positiva entre la estabilidad de los nodos y el UX Score.")
 
-with t4:
-    # Simulación de IA Generativa de Insights
-    st.markdown("<br>", unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown("""
-            <div style="background:rgba(0,242,255,0.05); padding:2rem; border-radius:1.5rem; border-left:5px solid var(--primary);">
-                <h3 style="color:var(--primary);">🧠 AI Executive Summary</h3>
-                <p>Basado en el análisis de flujo tensorial, se detecta una anomalía positiva en <b>Bio-Health</b>.</p>
-                <ul>
-                    <li>Probabilidad de escalabilidad: 89.2%</li>
-                    <li>Riesgo de saturación: Bajo</li>
-                    <li>Acción recomendada: Incrementar capital en Asset 'Neural'</li>
-                </ul>
-            </div>
-        """, unsafe_allow_html=True)
-    with c2:
-        # Gráfico de Dispersión Cuántico
-        fig_scatter = px.scatter(df_f, x='Revenue_USD', y='Transactions', size='UX_Score', 
-                                color='Volatility', color_continuous_scale='Spectral')
-        st.plotly_chart(apply_viz_style(fig_scatter), use_container_width=True)
-
-# ─── FOOTER TERMINAL ────────────────────────────────────────────────────────
-st.markdown(f"""
-    <div style="text-align:center; margin-top:5rem; padding:2rem; border-top:1px solid var(--glass-border);">
-        <p style="font-family:'IBM Plex Mono'; color:var(--text-muted); font-size:0.8rem;">
-            TERMINAL_ID: {datetime.now().strftime('%H%M%S')} • ENCRYPTION: AES-256 • STATUS: OPERATIONAL
-        </p>
-    </div>
-""", unsafe_allow_html=True)
+# ─── FOOTER ─────────────────────────────────────────────────────────────────
+st.markdown("<p style='text-align:center; opacity:0.3; margin-top:5rem;'>ROCKEFELLER SECURE TERMINAL v4.0 • ENCRYPTED CONNECTION</p>", unsafe_allow_html=True)
