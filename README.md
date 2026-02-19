@@ -1,2 +1,0 @@
-# KpisOnline
-Gráficos interactivos 
